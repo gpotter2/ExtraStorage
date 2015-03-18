@@ -1,0 +1,87 @@
+name: ExtraStorage
+main: org.blazr.extrastorage.main.java.ExtraStorage
+version: 0.6
+
+commands:
+  bp:
+    description: Opens the backpack.
+    usage: /bp
+  bp reload:
+    description: Reloads the plugin.
+    usage: /bp reload
+  bp check:
+    description: Check another player's backpack
+    usage: /bp check <player_name>
+  bp drop:
+    description: Drops items stored in temp storage when storage size is reduced
+    usage: /bp drop
+  bp version:
+    description: Lists the plugin's version
+    usage: /bp version
+permissions:
+  ExtraStorage.*:
+    description: Gives access to all commands
+    children:
+      ExtraStorage.bp.*: true
+      ExtraStorage.player.*: true
+      ExtraStorage.sign.*: true
+  ExtraStorage.bp.*:
+    description: Gives access to all backpack commands
+    children:
+      ExtraStorage.bp.open: true
+      ExtraStorage.bp.reload: true
+  ExtraStorage.player.*:
+    description: Gives access to all player commands
+    children:
+      ExtraStorage.player.check: true
+      ExtraStorage.player.check.exempt: true
+      ExtraStorage.player.noitemdrop: true
+      ExtraStorage.player.version: true
+  ExtraStorage.sign.*:
+    description: Gives access to all sign permissions
+    children:
+      ExtraStorage.sign.place: true
+      ExtraStorage.sign.use: true
+  ExtraStorage.bp.open:
+    description: Allows access to the backpack
+    default: false
+  ExtraStorage.bp.reload:
+    description: Allows access to command to reload the plugin
+    default: false
+  ExtraStorage.bp.size.54:
+    description: Players with this permission can have a backpack with 54 slots
+    default: false
+  ExtraStorage.bp.size.45:
+    description: Players with this permission can have a backpack with 45 slots
+    default: false
+  ExtraStorage.bp.size.36:
+    description: Players with this permission can have a backpack with 36 slots
+    default: false
+  ExtraStorage.bp.size.27:
+    description: Players with this permission can have a backpack with 27 slots
+    default: false
+  ExtraStorage.bp.size.18:
+    description: Players with this permission can have a backpack with 18 slots
+    default: false
+  ExtraStorage.bp.size.9:
+    description: Players with this permission can have a backpack with 9 slots
+    default: false
+  ExtraStorage.player.check:
+    description: Gives permission to check other players backpacks
+    default: false
+  ExtraStorage.player.check.exempt:
+    description: Players with this permission cannot have their backpacks checked by anyone
+    default: false
+  ExtraStorage.player.noitemdrop:
+    description: Players with this permission will not drop items on death
+    default: false
+  ExtraStorage.player.version:
+    description: Gives the player the ability to check the plugin's version.
+    default: false
+  ExtraStorage.sign.place:
+    description: Allows a player to place a sign for ExtraStorage use.
+    default: false
+  ExtraStorage.sign.use:
+    description: Allows a player to use an ExtraStorage sign.
+    default: false
+    

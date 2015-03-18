@@ -1,0 +1,18 @@
+allow-when-not-in-survival-mode: false
+world-specific-backpacks: false
+drop-items-on-player-death: true
+auto-add-pickups-to-storage: true
+update-check: true
+storage-name: Backpack
+error-log-level: 1
+Compatibility-Settings:
+  Vanish-No-Packet:
+    no-item-pickup-when-vanished: true
+world-blacklist:
+  worlds:
+  - example_world
+  - example_world2
+blacklisted-items:
+  items:
+  - GRASS
+  - BEDROCK
