@@ -24,9 +24,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -623,6 +624,14 @@ public boolean onCommand(CommandSender sender, Command cmd, String commandLabel,
        if(!conf.isSet("update-check")) conf.set("update-check", true);
        boolean update_check = conf.getBoolean("update-check");
        saveConfig();
+       
+       try {
+     	  Metrics metrics = new Metrics(this);
+           metrics.start();
+       } catch (IOException e) {
+           // Failed to submit the stats :-(
+       }
+       
        if (update_check) {
 	        Updater up = new Updater(this, 56836, getFile(), Updater.UpdateType.NO_DOWNLOAD, false);
 	        if(up.getResult() == UpdateResult.UPDATE_AVAILABLE){
@@ -666,25 +675,42 @@ public boolean onCommand(CommandSender sender, Command cmd, String commandLabel,
 	   return null;
    }
    
-	public static String getUUIDMinecraftS(OfflinePlayer p){//GETTING JSON UUID FROM MINECRAFT SERVERS
-		String basic = "https://api.mojang.com/users/profiles/minecraft/";
-		String get = "";
-		try {//GETTING TEXT
-			URL url = new URL(basic + p.getName());
-		    BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
-		    String line;
-		    while ((line = in.readLine()) != null) {
-		    	get = get + line;
-		    }
-		    in.close();
-		} catch (MalformedURLException e){//SHOULDN'T HAPPEND !
-			System.out.println("Malformed URL: " + e.getMessage());
+   private static String getText(String myURL) {
+		StringBuilder sb = new StringBuilder();
+		URLConnection urlConn = null;
+		InputStreamReader in = null;
+		try {
+			URL url = new URL(myURL);
+			urlConn = url.openConnection();
+			if (urlConn != null)
+				urlConn.setReadTimeout(5 * 1000);
+			if (urlConn != null && urlConn.getInputStream() != null) {
+				in = new InputStreamReader(urlConn.getInputStream(), Charset.defaultCharset());
+				BufferedReader bufferedReader = new BufferedReader(in);
+				if (bufferedReader != null) {
+					int cp;
+					while ((cp = bufferedReader.read()) != -1) {
+						sb.append((char) cp);
+					}
+					bufferedReader.close();
+				}
+			}
+		in.close();
 		} catch (IOException e) {
 			if(e.getMessage().contains("429")) return "wait";
-			System.out.println("Error: " + e.getMessage());
-		}
-		if(get == null || get.equals(null) || get.equals("")){//IF USERNAME DIDN'T EXIST
+			throw new RuntimeException("Exception while calling URL:"+ myURL, e);
+		} 
+		return sb.toString();
+	}
+   
+   
+	public static String getUUIDMinecraftS(OfflinePlayer p){//GETTING JSON UUID FROM MINECRAFT SERVERS
+		String basic = "https://api.mojang.com/users/profiles/minecraft/";
+		String get = getText(basic + p.getName());
+		if(get == null || get.equals("")){//IF USERNAME DIDN'T EXIST
 			return null;
+		} else if(get.equals("wait")){
+			return "wait";
 		}
 		JSONObject array = new JSONObject(get);
 		if(array.has("id")){//ADDING THE - TO MAKE IT A REAL UUID
