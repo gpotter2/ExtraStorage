@@ -179,36 +179,36 @@ import org.bukkit.inventory.ItemStack;
              }
            }
            int emptyBackPackSlots = 0;
-           for (ItemStack item : (Inventory)ExtraStorage.Inventories.get(player_uuid)) {
-             if (item == null) {
-               emptyBackPackSlots++;
-             }
-           }
-           if (emptyPlayerSlots <= 1)
-           {
-             if (emptyBackPackSlots > 0)
-             {
-               if ((plugin.getServer().getPluginManager().getPlugin("VanishNoPacket") != null) && (plugin.getConfig().getBoolean("Compatibility-Settings.Vanish-No-Packet.no-item-pickup-when-vanished")))
-               {
-                 VNPCompat.vanishPlayerPickupItemEvent(event, plugin);
-               }
-               else
-               {
-                 ((Inventory)ExtraStorage.Inventories.get(player_uuid)).addItem(new ItemStack[] { event.getItem().getItemStack() });
-                 
- 
- 
-                 ExtraStorage.invChanged.put(player_uuid, Boolean.valueOf(true));
-                 
-                 event.getItem().remove();
-                 event.setCancelled(true);
-                 event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ITEM_PICKUP, 100.0F, 100.0F);
-               }
-               return;
-             }
-             event.getPlayer().sendMessage("Backpack and inventory are full.");
-             
-             return;
+           if(ExtraStorage.Inventories.containsKey(player_uuid)){
+	           for (ItemStack item : (Inventory) ExtraStorage.Inventories.get(player_uuid)) {
+	             if (item == null) {
+	               emptyBackPackSlots++;
+	             }
+	           }
+	           if (emptyPlayerSlots <= 1)
+	           {
+	             if (emptyBackPackSlots > 0)
+	             {
+	               if ((plugin.getServer().getPluginManager().getPlugin("VanishNoPacket") != null) && (plugin.getConfig().getBoolean("Compatibility-Settings.Vanish-No-Packet.no-item-pickup-when-vanished")))
+	               {
+	                 VNPCompat.vanishPlayerPickupItemEvent(event, plugin);
+	               }
+	               else
+	               {
+	                 ((Inventory) ExtraStorage.Inventories.get(player_uuid)).addItem(new ItemStack[] { event.getItem().getItemStack() });
+	 
+	                 ExtraStorage.invChanged.put(player_uuid, Boolean.valueOf(true));
+	                 
+	                 event.getItem().remove();
+	                 event.setCancelled(true);
+	                 event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ITEM_PICKUP, 100.0F, 100.0F);
+	               }
+	               return;
+	             }
+	             event.getPlayer().sendMessage("Backpack and inventory are full.");
+	             
+	             return;
+	           }
            }
          }
          else
@@ -236,7 +236,7 @@ import org.bukkit.inventory.ItemStack;
        log = plugin.getLogger();
     	log.severe("Error in onItemPickup method caused by " + event.getPlayer().getName());
 					ex.printStackTrace();
-					}	
+	 }	
    }
    
    @EventHandler(priority=EventPriority.NORMAL)
