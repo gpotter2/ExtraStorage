@@ -214,19 +214,20 @@ public class Import extends Thread {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	private String getUUID(OfflinePlayer p){
-		String retur = ExtraStorage.getUUIDMinecraftS(p);
+		String retur = ExtraStorage.getUUIDMinecraftS(p, false);
 		if(retur != null){
 			if(retur.equals("wait")){
 				boolean wait = true;
 				while(wait){
-					if(sender != null) sender.sendMessage(ExtraStorage.PNC + ChatColor.YELLOW + "Minecraft API servers are overcharged... Waiting for them to be good !");
+					if(sender != null && retur.equals("wait")) sender.sendMessage(ExtraStorage.PNC + ChatColor.YELLOW + "Minecraft API servers are overcharged... Waiting for them to be good !");
 					try {
 						Thread.sleep(60000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					retur = ExtraStorage.getUUIDMinecraftS(p);
+					retur = ExtraStorage.getUUIDMinecraftS(p, false);
 					if(retur == null){
 						wait = false;
 					} else if(!retur.equals("wait")){

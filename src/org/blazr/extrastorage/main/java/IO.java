@@ -89,7 +89,11 @@ package org.blazr.extrastorage.main.java;
            n++;
          }
        }
-					UUID player_uuid = ExtraStorage.getUUIDMinecraft(player);
+	   UUID player_uuid = ExtraStorage.getUUIDMinecraft(player, true);
+	   if(player_uuid == null){
+		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + player.getName());
+		   return;
+	   }
        if (overageOccurred)
        {
          ExtraStorage.dropItems.put(player_uuid, overageItems);
@@ -134,7 +138,11 @@ package org.blazr.extrastorage.main.java;
      {
        Inventory inventory = null;
        String playerName = null;
-				    UUID player_uuid = ExtraStorage.getUUIDMinecraft(player);
+       UUID player_uuid = ExtraStorage.getUUIDMinecraft(player, true);
+       if(player_uuid == null){
+		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + player.getName());
+		   return;
+	   }
        if (plugin.getConfig().getBoolean("world-specific-backpacks")) {
         	playerName = player.getWorld().getName() + "_" + player_uuid;
        } else {

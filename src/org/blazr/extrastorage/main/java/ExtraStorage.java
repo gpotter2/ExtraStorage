@@ -42,7 +42,6 @@ import org.blazr.extrastorage.main.java.Updater.UpdateResult;
 import org.blazr.extrastorage.main.java.json.JSONObject;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -50,10 +49,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.InvalidDescriptionException;
@@ -63,8 +59,6 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-
-import com.google.common.io.Files;
  
  public class ExtraStorage
    extends JavaPlugin
@@ -73,15 +67,18 @@ import com.google.common.io.Files;
    protected static Map<UUID, File> saveFiles = new HashMap<UUID, File>();
    protected static Map<UUID, Boolean> invChanged = new HashMap<UUID, Boolean>();
    protected static Map<UUID, ItemStack[]> dropItems = new HashMap<UUID, ItemStack[]>();
+   protected static Map<OfflinePlayer, UUID> known_uuid = new HashMap<OfflinePlayer, UUID>();
    protected static ExtraStorage plugin = null;
    protected static int errorLogLevel = 1;
    protected static String PNC = ChatColor.YELLOW + "[ExtraStorage]";
    static  boolean importStarted = false;
    static Import imp = null;
    
+   public File e_file;
+   
    public boolean updatenotice = false;
    public String updatenoticemessage = null;
-   
+      
    public boolean addItemToPlayerStorage(String playerName, ItemStack item)
    {
      try
@@ -201,313 +198,33 @@ import com.google.common.io.Files;
    }
    
    @SuppressWarnings("deprecation")
-public void setPlayerStorage(String playerName, Inventory inventory)
-   {
+public void setPlayerStorage(String playerName, Inventory inventory) {
      Logger log;
-     try
-     {
-					UUID concerned_uuid = ExtraStorage.getUUIDMinecraft(Bukkit.getOfflinePlayer(playerName));
-       Inventories.put(concerned_uuid, inventory);
-       invChanged.put(UUID.fromString(playerName), Boolean.valueOf(true));
-     }
-     catch (Exception e)
-     {
-       log = getLogger();
-   	log.severe("Error in setPlayerStorage()");
-					e.printStackTrace();
-					}
-   }
-   
-   @SuppressWarnings("deprecation")
-public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
-   {
-     Logger log = getLogger();
-				  UUID sender_uuid = null;
-				  if(sender instanceof Player){
-					  sender_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) sender);
-				  }
-     try
-     {
-       String cmdName = cmd.getName().toLowerCase();
-       if (cmdName.trim().equals("bp"))
-       {
-         int numOfArgs = args.length;
-         switch (numOfArgs)
-         {
-         case 0: 
-           if (!(sender instanceof Player))
-           {
-             sender.sendMessage(PNC + ChatColor.RED + "You must be a player to use the backpack!");
-           }
-           else
-           {
-             Player player = (Player)sender;
-             if (getConfig().getList("world-blacklist.worlds").contains(player.getWorld().getName())) {
-               sender.sendMessage(PNC + ChatColor.RED + "Backpack not allowed in this world.");
-             } else if (sender.hasPermission("ExtraStorage.bp.open"))
-             {
-               if ((!getConfig().getBoolean("allow-when-not-in-survival-mode")) && (player.getGameMode() != GameMode.SURVIVAL))
-               {
-                 sender.sendMessage(PNC + ChatColor.RED + "You must be in survival mode to use the backpack!");
-               }
-               else if (Inventories.containsKey(sender_uuid))
-               {
-                 player.openInventory((Inventory) Inventories.get(sender_uuid));
-               }
-               else
-               {
-                 IO.loadBackpackFromDiskOnLogin(player, this);
-                 player.openInventory((Inventory)Inventories.get(sender_uuid));
-               }
-             }
-             else {
-               sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           }
-           break;
-         case 1: 
-           if (args[0].equalsIgnoreCase("reload"))
-           {
-             if (sender.hasPermission("ExtraStorage.bp.reload"))
-             {
-               onDisable();
-               reloadConfig();
-               Inventories = new HashMap<UUID, Inventory>();
-               for (Player player1 : getServer().getOnlinePlayers()) {
-            	   IO.loadBackpackFromDiskOnLogin(player1, this);
-               }
-               sender.sendMessage(PNC + "Reloaded ExtraStorage successfully.");
-               
-               log.info("Reloaded successfully");
-             }
-             else
-             {
-               sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           }
-           else if (args[0].equalsIgnoreCase("check"))
-           {
-             if (!(sender instanceof Player)) {
-               sender.sendMessage(PNC + ChatColor.RED + "You must be a player to check backpacks!");
-             } else if (sender.hasPermission("ExtraStorage.bp.check")) {
-               sender.sendMessage(PNC + ChatColor.RED + "Include the player's name to check. \"/bp check <player_name>\"");
-             } else {
-               sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           }
-           else if (args[0].equalsIgnoreCase("update"))
-           {
-             if (sender.hasPermission("ExtraStorage.*")) {
-            	this.getLogger().info("Downloading the new version of ExtraStorage !");
-	    		Updater up = new Updater(this, 56836, getFile(), Updater.UpdateType.DEFAULT, false);
-		        if(up.getResult() == UpdateResult.SUCCESS){
-		        	sender.sendMessage(PNC + ChatColor.GREEN + "Plugin successfuly downloaded ! Reloading the plugin...");
-		        	this.reload(sender);
-		        } else if(up.getResult() == UpdateResult.NO_UPDATE){
-		        	sender.sendMessage(PNC + ChatColor.GREEN + "The plugin already is up to date !");
-		        } else {
-		        	sender.sendMessage(PNC + ChatColor.RED + "Plugin couldn't be downloaded !");
-		        }
-             } else {
-            	 sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           }
-           else if (args[0].equalsIgnoreCase("drop"))
-           {
-             if (!(sender instanceof Player))
-             {
-               sender.sendMessage(PNC + ChatColor.RED + "You must be a player to use that command!");
-             }
-             else if (sender.hasPermission("ExtraStorage.bp.open"))
-             {
-               File overageStorage = new File(getDataFolder() + File.separator + "data" + File.separator + "temp_inventories");
-               
- 
-               Player player1 = (Player)sender;
-               if (!overageStorage.exists()) {
-                 overageStorage.mkdir();
-               }
-               File overageSaveFile = new File(overageStorage.getCanonicalPath() + File.separator + sender_uuid + ".yml");
-               
- 
- 
-               FileConfiguration overageConfig = YamlConfiguration.loadConfiguration(overageSaveFile);
-               if (dropItems.containsKey(sender_uuid))
-               {
-                 ItemStack[] drops = (ItemStack[])dropItems.get(sender_uuid);
-                 for (int n = 0; n < drops.length; n++) {
-                   if (drops[n] != null)
-                   {
-                     Item dropItem = player1.getWorld().dropItemNaturally(player1.getLocation(), drops[n]);
-                     PlayerDropItemEvent itemDrop = new PlayerDropItemEvent(player1, dropItem);
-                     plugin.getServer().getPluginManager().callEvent(itemDrop);
-                   }
-                 }
-                 dropItems.remove(sender_uuid);
-                 if (overageSaveFile.exists()) {
-                   overageSaveFile.delete();
-                 }
-               }
-               else if (overageSaveFile.exists())
-               {
-                 List<?> list = overageConfig.getList("inventory");
-                 
-                 ItemStack[] loadedInventory = new ItemStack[54];
-                 if (list != null)
-                 {
-                   for (int i = 0; i < list.size(); i++) {
-                     loadedInventory[i] = ((ItemStack)list.get(i));
-                   }
-                   for (ItemStack item : loadedInventory) {
-                     if (item != null) {
-                       player1.getWorld().dropItemNaturally(player1.getLocation(), item);
-                     }
-                   }
-                 }
-                 overageSaveFile.delete();
-               }
-               else
-               {
-                 sender.sendMessage(PNC + ChatColor.RED + "Nothing to be dropped.");
-               }
-             }
-             else
-             {
-               sender.sendMessage(PNC + ChatColor.RED + "You do not have permission for that command");
-             }
-           } else if (args[0].equalsIgnoreCase("version")) {
-             if (sender.hasPermission("ExtraStorage.player.version")) {
-               sender.sendMessage(PNC + "ExtraStorage Version: " + getDescription().getVersion() + " (modified)");
-             } else {
-               sender.sendMessage(PNC + ChatColor.RED + "You do not have permission for that command");
-             }
-           } else if (args[0].equalsIgnoreCase("not_imported")) {
-               if (sender.hasPermission("ExtraStorage.*")) {
-            	   String folderpath_not_imported = plugin.getDataFolder() + File.separator + "data" + File.separator + "not_imported";
-            	   File folder_not_imported = new File(folderpath_not_imported);
-            	   if(!folder_not_imported.exists()) folder_not_imported.mkdir();
-            	   File[] list_folder_not_imported = folder_not_imported.listFiles();
-            	   if(list_folder_not_imported.length != 0) sender.sendMessage(PNC + ChatColor.RED + "All not imported bagpacks:");
-            	   else sender.sendMessage(PNC + ChatColor.GREEN + "They are no not imported bagpacks !!!");
-            	   for(File f : list_folder_not_imported){
-            		   if(f.isFile()){
-            			   sender.sendMessage(PNC + ChatColor.RED + f.getName().substring(0, f.getName().length() - 4));
-            		   }
-            	   }
-               } else {
-            	   sender.sendMessage(PNC + ChatColor.RED + "You do not have permission for that command");
-               }
-           } else if (args[0].equalsIgnoreCase("my_uuid")){
-						  if(!(sender instanceof Player)){
-							  sender.sendMessage(PNC + ChatColor.RED + "You must be a player to use that command!");
-							  return true;
-						  }
-             if (sender.hasPermission("ExtraStorage.player.*")) {
-								double now = System.currentTimeMillis();
-								UUID player_uuid = getUUIDMinecraft((Player) sender);
-								double after = System.currentTimeMillis();
-								double time = after - now;
-               	sender.sendMessage(PNC + "ExtraStorage: Your uuid=" + player_uuid + "; Time=" + time + "ms");
-             } else {
-               sender.sendMessage(PNC + ChatColor.RED + "You do not have permission for that command");
-             }
-           } else if (args[0].equalsIgnoreCase("import")) {
-             if (sender.hasPermission("ExtraStorage.*")) {
-            	 if(importStarted){
-            		 imp.stopImport();
-            		 imp = null;
-            		 importStarted = false;
-            		 sender.sendMessage(PNC + ChatColor.GREEN + "Import stopped !");
-            	 } else {
-            		importStarted = true;
-					imp = new Import(this, sender);
-					imp.start();
-            	 }
-			} else {
-               	sender.sendMessage(PNC + ChatColor.RED + "You do not have permission for that command");
-             }
-           }
-           else {
-             sender.sendMessage(PNC + ChatColor.RED + "Unknown command.");
-           }
-           break;
-         case 2: 
-           if (args[0].equalsIgnoreCase("check"))
-           {
-             if (!(sender instanceof Player)) {
-               sender.sendMessage(PNC + ChatColor.RED + "You must be a player to check backpacks!");
-             } else if (sender.hasPermission("ExtraStorage.player.check")) {
-			   UUID concerned_uuid = getUUIDMinecraft(getServer().getOfflinePlayer(args[1]));
-               if (Inventories.containsKey(concerned_uuid)) {
-                 Player checkee = getServer().getPlayer(args[1]);
-                 if (!checkee.hasPermission("ExtraStorage.player.check.exempt")) {
-                   Player player1 = (Player) sender;
-                   player1.openInventory((Inventory) Inventories.get(concerned_uuid));
-                 } else {
-                   sender.sendMessage(PNC + ChatColor.RED + "You don't have permission to check that player.");
-                 }
-               } else {
-                 sender.sendMessage(PNC + ChatColor.RED + "Could not find a backpack for " + args[1] + ".");
-               }
-             } else {
-               sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           } else {
-             sender.sendMessage(PNC + ChatColor.RED + "Unknown command.");
-           }
-           break;
-         case 3:
-         if(args[0].equalsIgnoreCase("set")) {
-             if (sender.hasPermission("ExtraStorage.*")) {
-            	 String folder_path = plugin.getDataFolder() + File.separator + "data" + File.separator;
-            	 String folderpath_not_imported = plugin.getDataFolder() + File.separator + "data" + File.separator + "not_imported";
-				 if(!new File(folderpath_not_imported).exists()) new File(folderpath_not_imported).mkdir();
-            	 if(new File(folder_path + "not_imported" + File.separator + args[1] + ".yml").exists()){
-            		File old = new File(folder_path + "not_imported" + File.separator + args[1] + ".yml");
-            		UUID new_name_uuid = getUUIDMinecraft(getServer().getOfflinePlayer(args[2]));
-            		if(new_name_uuid == null){
-            			sender.sendMessage(PNC + ChatColor.RED + "The player:" + args[2] + " does not exist on Mojang servers !");
-            		} else {
-            			if(plugin.getConfig().getBoolean("world-specific-backpacks", false)){
-            				String parts[] = old.getName().substring(0, old.getName().length() - 4).split("_");
-            				String pandw[] = getWorldAndPlayer(parts);
-            				if(pandw[0] != null && pandw[1] != null){
-	            				File final_file = new File(folder_path + pandw[0] + "_" + new_name_uuid + ".yml");
-	            				Files.move(old, final_file);
-	            				sender.sendMessage(PNC + ChatColor.GREEN + "The bagpack '" + args[1] + "' was set to the player " + args[2] + " !");
-            				} else {
-            					sender.sendMessage(PNC + ChatColor.RED + "The world does not exist !");
-            				}
-            			} else {
-            				File final_file = new File(folder_path + new_name_uuid + ".yml");
-            				Files.move(old, final_file);
-            				sender.sendMessage(PNC + ChatColor.GREEN + "The bagpack '" + args[1] + "' was set to the player " + args[2] + " !");
-            			}
-            		}
-            	 } else {
-                     sender.sendMessage(PNC + ChatColor.RED + "No bagpacks found with this name:'" + args[1] + "' in the not_imported folder !");
-                 }
-             } else {
-               sender.sendMessage(PNC + ChatColor.RED + "You don't have permission for that command.");
-             }
-           } else {
-               sender.sendMessage(PNC + ChatColor.RED + "Unknown command.");
-           }
-           break;
-         default: 
-           sender.sendMessage(PNC + ChatColor.RED + "Too many arguments for the command.");
-         }
-         return true;
-       }
+     try {
+    	UUID concerned_uuid = ExtraStorage.getUUIDMinecraft(Bukkit.getOfflinePlayer(playerName), true);
+    	if(concerned_uuid == null){
+ 		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + playerName);
+ 		   return;
+ 	   	}
+       	Inventories.put(concerned_uuid, inventory);
+       	invChanged.put(UUID.fromString(playerName), Boolean.valueOf(true));
      } catch (Exception e) {
-       log = getLogger();
-   	   log.severe("Error in setPlayerStorage()");
-   	   e.printStackTrace();
-     }
-     return false;
+    	 log = getLogger();
+   	  	 log.severe("Error in setPlayerStorage()");
+   	  	 e.printStackTrace();
+	 }
    }
    
-   private String[] getWorldAndPlayer(String[] s){
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
+		if(cmd.getName().toLowerCase().trim().equals("bp")){
+		   new CommandsHandler(sender, cmd, args, this).start();
+		   return true;
+		}
+		return false;
+	}
+	
+   
+   String[] getWorldAndPlayer(String[] s){
 		String old = null;
 		String retur[] = new String[2];
 		int finished_world = 0;
@@ -554,6 +271,7 @@ public boolean onCommand(CommandSender sender, Command cmd, String commandLabel,
      try
      {
        plugin = this;
+       e_file = getFile();
        PluginManager pm = getServer().getPluginManager();
        EventHandlers eh = new EventHandlers();
        pm.registerEvents(eh, this);
@@ -667,23 +385,30 @@ public boolean onCommand(CommandSender sender, Command cmd, String commandLabel,
 		}
    }
    
-   public static UUID getUUIDMinecraft(OfflinePlayer p){
-	   String uuid = getUUIDMinecraftS(p);
-	   if(isUUID(uuid)){
-		   return UUID.fromString(uuid);
+   public static UUID getUUIDMinecraft(OfflinePlayer p, boolean main_thread){
+	   if(known_uuid.containsKey(p)){
+		   return known_uuid.get(p);
+	   } else {
+		   String uuid = getUUIDMinecraftS(p, main_thread);
+		   if(isUUID(uuid)){
+			   UUID c_uuid = UUID.fromString(uuid);
+			   known_uuid.put(p, c_uuid);
+			   return c_uuid;
+		   }
 	   }
 	   return null;
    }
    
-   private static String getText(String myURL) {
-		StringBuilder sb = new StringBuilder();
+   private static String getText(String myURL, boolean main_thread) {
+	   StringBuilder sb = new StringBuilder();
 		URLConnection urlConn = null;
 		InputStreamReader in = null;
 		try {
 			URL url = new URL(myURL);
 			urlConn = url.openConnection();
 			if (urlConn != null)
-				urlConn.setReadTimeout(5 * 1000);
+				if(main_thread) urlConn.setReadTimeout(5 * 1000);
+				else urlConn.setReadTimeout(30 * 1000);
 			if (urlConn != null && urlConn.getInputStream() != null) {
 				in = new InputStreamReader(urlConn.getInputStream(), Charset.defaultCharset());
 				BufferedReader bufferedReader = new BufferedReader(in);
@@ -698,22 +423,25 @@ public boolean onCommand(CommandSender sender, Command cmd, String commandLabel,
 		in.close();
 		} catch (IOException e) {
 			if(e.getMessage().contains("429")) return "wait";
-			throw new RuntimeException("Exception while calling URL:"+ myURL, e);
-		} 
+			return null;
+		} catch(Exception e){
+		   return null;
+		}
 		return sb.toString();
 	}
-   
-   
-	public static String getUUIDMinecraftS(OfflinePlayer p){//GETTING JSON UUID FROM MINECRAFT SERVERS
+   /**
+    @deprecated
+	*/
+	public static String getUUIDMinecraftS(OfflinePlayer p, boolean main_thread){
 		String basic = "https://api.mojang.com/users/profiles/minecraft/";
-		String get = getText(basic + p.getName());
-		if(get == null || get.equals("")){//IF USERNAME DIDN'T EXIST
+		String get = getText(basic + p.getName(), main_thread);
+		if(get == null){
 			return null;
 		} else if(get.equals("wait")){
 			return "wait";
 		}
 		JSONObject array = new JSONObject(get);
-		if(array.has("id")){//ADDING THE - TO MAKE IT A REAL UUID
+		if(array.has("id")){
 			return UUID.fromString(array.getString("id").replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5")).toString();
 		} else {
 			return null;

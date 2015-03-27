@@ -60,7 +60,7 @@ import org.bukkit.inventory.ItemStack;
      {
        if (((event.getWhoClicked().hasPermission("ExtraStorage.bp.open")) || (event.getWhoClicked().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getWhoClicked().getWorld().getName()))) {
          if ((event.getInventory().getTitle().contentEquals(plugin.getConfig().getString("storage-name"))) && (!event.isCancelled())) {
-           ExtraStorage.invChanged.put(ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getWhoClicked()), Boolean.valueOf(true));
+           ExtraStorage.invChanged.put(ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getWhoClicked(), true), Boolean.valueOf(true));
          }
        }
      }
@@ -77,7 +77,7 @@ import org.bukkit.inventory.ItemStack;
    private void onInventoryClose(InventoryCloseEvent event)
    {
      Logger log;
-				  UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer());
+	 UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer(), true);
      try
      {
        if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())) && (event.getInventory().getTitle().equals(plugin.getConfig().getString("storage-name"))))
@@ -101,8 +101,6 @@ import org.bukkit.inventory.ItemStack;
                if (!messaged)
                {
                  plugin.getServer().getPlayer(event.getPlayer().getName()).sendMessage("You can't put that item in your backpack.");
- 
- 
                  messaged = true;
                }
              }
@@ -166,7 +164,7 @@ import org.bukkit.inventory.ItemStack;
      try
      {
        if ((plugin.getConfig().getBoolean("auto-add-pickups-to-storage")) && (event.getPlayer().hasPermission("ExtraStorage.bp.open")) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))) {
-					  UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer());
+		 UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer(), true);
          if (!plugin.getConfig().getList("blacklisted-items.items").contains(event.getItem().getItemStack().getType().toString()))
          {
            if (event.isCancelled()) {
@@ -248,7 +246,13 @@ import org.bukkit.inventory.ItemStack;
        if ((plugin.getConfig().getBoolean("drop-items-on-player-death")) && 
          (event.getEntity().getPlayer().hasPermission("ExtraStorage.bp.open")) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getEntity().getPlayer().getWorld().getName())) && (!event.getEntity().getPlayer().hasPermission("ExtraStorage.player.noitemdrop")))
        {
-         String playerName = ExtraStorage.getUUIDMinecraft(event.getEntity().getPlayer()) + "";
+    	 
+         UUID temp_uuid = ExtraStorage.getUUIDMinecraft(event.getEntity().getPlayer(), true);
+         if(temp_uuid == null){
+			   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getEntity().getPlayer().getName());
+			   return;
+		 }
+         String playerName = temp_uuid.toString() + "";
          ItemStack[] drops = ((Inventory)ExtraStorage.Inventories.get(playerName)).getContents();
          
          ((Inventory)ExtraStorage.Inventories.get(playerName)).clear();
@@ -256,11 +260,6 @@ import org.bukkit.inventory.ItemStack;
            if (drops[n] != null)
            {
              Item dropItem = event.getEntity().getWorld().dropItemNaturally(event.getEntity().getLocation(), drops[n]);
-             
- 
- 
- 
- 
              PlayerDropItemEvent itemDrop = new PlayerDropItemEvent(event.getEntity(), dropItem);
              
              plugin.getServer().getPluginManager().callEvent(itemDrop);
@@ -302,7 +301,11 @@ import org.bukkit.inventory.ItemStack;
      {
        if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())))
        {
-         UUID playerName = ExtraStorage.getUUIDMinecraft(event.getPlayer());
+         UUID playerName = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
+         if(playerName == null){
+			   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getPlayer().getName());
+			   return;
+		   }
          if(ExtraStorage.saveFiles.get(playerName) != null && ExtraStorage.Inventories.get(playerName) != null){
         	 IO.saveBackPack((Inventory) ExtraStorage.Inventories.get(playerName), ExtraStorage.saveFiles.get(playerName));
          }
@@ -386,7 +389,11 @@ import org.bukkit.inventory.ItemStack;
            {
              if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))
              {
-						    UUID player_uuid = ExtraStorage.getUUIDMinecraft(event.getPlayer());
+			   UUID player_uuid = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
+			   if(player_uuid == null){
+				   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getPlayer().getName());
+				   return;
+			   }
                if (ExtraStorage.Inventories.containsKey(player_uuid))
                {
                  event.getPlayer().openInventory((Inventory)ExtraStorage.Inventories.get(player_uuid));
