@@ -191,9 +191,10 @@ public class Import extends Thread {
 				br.close();
 				return false;
 			}
-			br.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			try { br.close(); } catch (Exception ignore) {}
 		}
 		return true;
 	}

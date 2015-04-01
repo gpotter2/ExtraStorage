@@ -67,10 +67,10 @@ import org.bukkit.scheduler.BukkitRunnable;
    protected static Map<UUID, File> saveFiles = new HashMap<UUID, File>();
    protected static Map<UUID, Boolean> invChanged = new HashMap<UUID, Boolean>();
    protected static Map<UUID, ItemStack[]> dropItems = new HashMap<UUID, ItemStack[]>();
-   protected static Map<OfflinePlayer, UUID> known_uuid = new HashMap<OfflinePlayer, UUID>();
+   protected static Map<UUID, UUID> known_uuid = new HashMap<UUID, UUID>();
    protected static ExtraStorage plugin = null;
    protected static int errorLogLevel = 1;
-   protected static String PNC = ChatColor.YELLOW + "[ExtraStorage]";
+   protected static String PNC;
    static  boolean importStarted = false;
    static Import imp = null;
    
@@ -294,8 +294,6 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
          }
        }
        File oldFile1 = new File(defaultDir.getCanonicalPath() + File.separator + "data" + File.separator + "LastUpdateCheckTime");
-       
- 
        File oldFile2 = new File(defaultDir.getCanonicalPath() + File.separator + "data" + File.separator + "LatestVersion");
        if (oldFile1.exists()) {
          oldFile1.delete();
@@ -312,21 +310,28 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
        FileConfiguration conf = getConfig();
        conf.options().copyDefaults(true);
        if (conf.get("Comaptibility-Settings.Vanish-No-Packet.no-item-pickup-when-vanished") != null) {
-         conf.set("Comaptibility-Settings", null);
+    	   conf.set("Comaptibility-Settings", null);
+       }
+       if (!conf.isSet("display-prefix")) {
+    	   conf.set("display-prefix", true);
+       }
+       if(conf.getBoolean("display-prefix")){
+    	   PNC = ChatColor.YELLOW + "[ExtraStorage]";
+       } else {
+    	   PNC = "";
        }
        List<String> blacklist = conf.getStringList("blacklisted-items");
        boolean isOldStyle = false;
        for (String item : blacklist) {
          if (isNumeric(item)) {
-           isOldStyle = true;
+        	 isOldStyle = true;
          }
        }
        if (isOldStyle)
        {
          List<String> newList = new ArrayList<String>();
          for (String item : blacklist) {
-           if (isNumeric(item))
-           {
+           if (isNumeric(item)) {
              int itemCode = Integer.parseInt(item);
              
              ItemStack tempIS = new ItemStack(itemCode);
@@ -386,13 +391,13 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
    }
    
    public static UUID getUUIDMinecraft(OfflinePlayer p, boolean main_thread){
-	   if(known_uuid.containsKey(p)){
-		   return known_uuid.get(p);
+	   if(known_uuid.containsKey(p.getUniqueId())){
+		   return known_uuid.get(p.getUniqueId());
 	   } else {
 		   String uuid = getUUIDMinecraftS(p, main_thread);
 		   if(isUUID(uuid)){
 			   UUID c_uuid = UUID.fromString(uuid);
-			   known_uuid.put(p, c_uuid);
+			   known_uuid.put(p.getUniqueId(), c_uuid);
 			   return c_uuid;
 		   }
 	   }
