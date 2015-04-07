@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Antony Prince and Gabriel POTTER
+ *  Copyright (C) 2015 Gabriel POTTER
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,45 +14,44 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- */
+ */ 
 
 package org.blazr.extrastorage.main.java;
 
  import java.io.File;
- import java.util.Iterator;
- import java.util.List;
- import java.util.Map;
- import java.util.UUID;
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
  import org.bukkit.ChatColor;
- import org.bukkit.Material;
- import org.bukkit.configuration.file.FileConfiguration;
- import org.bukkit.configuration.file.YamlConfiguration;
- import org.bukkit.entity.Player;
- import org.bukkit.inventory.Inventory;
- import org.bukkit.inventory.ItemStack;
- import org.bukkit.plugin.Plugin;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
  
  
  public class IO
  {
-   private static Inventory changeTitle(Inventory inv, Plugin plugin, int invSize)
-     throws Exception
-   {
-     Inventory newInventory = plugin.getServer().createInventory(null, invSize, plugin.getConfig().getString("storage-name"));
-     
-     int n = 0;
-     while (n < invSize)
-     {
-       newInventory.setItem(n, inv.getItem(n));
-       n++;
-     }
+   private static Inventory changeTitle(Inventory inv, Plugin plugin, int invSize) {
+	   Inventory newInventory = null;
+	   if(plugin.getConfig().getString("storage-name") != null){
+		     newInventory = plugin.getServer().createInventory(null, invSize, plugin.getConfig().getString("storage-name"));
+		     int n = 0;
+		     while (n < invSize)
+		     {
+		       newInventory.setItem(n, inv.getItem(n));
+		       n++;
+		     }
+	   }
      return newInventory;
    }
    
-   private static void loadBackPack(File loadFile, Inventory inventory, Plugin plugin, int invSize, Player player)
-     throws Exception
-   {
+   private static void loadBackPack(File loadFile, Inventory inventory, Plugin plugin, int invSize, Player player) throws IOException{
      FileConfiguration backpackConfig = YamlConfiguration.loadConfiguration(loadFile);
      
      List<?> list = backpackConfig.getList("inventory");
@@ -123,17 +122,14 @@ package org.blazr.extrastorage.main.java;
        inventory.setContents(actualInventory);
        inventory = changeTitle(inventory, plugin, invSize);
        ExtraStorage.Inventories.put(player_uuid, inventory);
-       if (overageOccurred)
-       {
+       if (overageOccurred) {
          saveBackPack(inventory, loadFile);
          overageOccurred = false;
        }
      }
    }
    
-   protected static void loadBackpackFromDiskOnLogin(Player player, Plugin plugin)
-     throws Exception
-   {
+   protected static void loadBackpackFromDiskOnLogin(Player player, Plugin plugin) throws IOException {
      if ((player.hasPermission("ExtraStorage.bp.open")) || (player.hasPermission("ExtraStorage.sign.use")))
      {
        Inventory inventory = null;
@@ -219,35 +215,38 @@ package org.blazr.extrastorage.main.java;
      }
    }
    
-   protected static void save()
-     throws Exception
-   {
-     Iterator<Map.Entry<UUID, Boolean>> it = ExtraStorage.invChanged.entrySet().iterator();
-     while (it.hasNext())
-     {
-       Map.Entry<UUID, Boolean> pair = it.next();
-       String playerName = pair.getKey() + "";
-       if ((ExtraStorage.saveFiles.containsKey(playerName)) && 
-         (pair.getValue().booleanValue())) {
-         saveBackPack(ExtraStorage.Inventories.get(playerName), ExtraStorage.saveFiles.get(playerName));
-       }
-     }
+   protected static void save(ExtraStorage plugin) throws Exception {
+	     Iterator<Map.Entry<UUID, Boolean>> it = ExtraStorage.invChanged.entrySet().iterator();
+	     while (it.hasNext()) {
+	       Map.Entry<UUID, Boolean> pair = it.next();
+	       String playerName = pair.getKey() + "";
+	       if ((ExtraStorage.saveFiles.containsKey(playerName)) && 
+	         (pair.getValue().booleanValue())) {
+	    	   saveBackPack(ExtraStorage.Inventories.get(playerName), ExtraStorage.saveFiles.get(playerName));
+	       }
+	     }
+	     if(ExtraStorage.mojangUUID){
+		     File uuid_save_file = new File(plugin.getDataFolder().getCanonicalPath() + File.separator + "uuid_database.yml");
+		     if(!uuid_save_file.exists()){
+				   uuid_save_file.createNewFile();
+			 }
+		     YamlConfiguration uuid_save = YamlConfiguration.loadConfiguration(uuid_save_file);
+		     Iterator<Map.Entry<UUID, UUID>> it_uuid = ExtraStorage.known_uuid.entrySet().iterator();
+		     while (it_uuid.hasNext()) {
+		    	 Map.Entry<UUID, UUID> pair_uuid = it_uuid.next();
+		    	 uuid_save.set(pair_uuid.getKey().toString(), pair_uuid.getValue().toString());
+		     }
+		     uuid_save.save(uuid_save_file);
+	     }
    }
    
-   protected static void saveBackPack(Inventory inventory, File saveFile)
-     throws Exception
-   {
-     try
-     {
-       FileConfiguration backpackConfig = YamlConfiguration.loadConfiguration(saveFile);
-       if(backpackConfig != null){
-	 	      backpackConfig.set("inventory", inventory.getContents());
-  		      backpackConfig.save(saveFile);
-					}
-     }
-     catch (Exception e)
-     {
-       e.printStackTrace();
-     }
+   protected static void saveBackPack(Inventory inventory, File saveFile) throws IOException {
+	   if(saveFile != null){
+	       FileConfiguration backpackConfig = YamlConfiguration.loadConfiguration(saveFile);
+	       if(backpackConfig != null){
+		 	      backpackConfig.set("inventory", inventory.getContents());
+	  		      backpackConfig.save(saveFile);
+	       }
+	   }
    }
  }

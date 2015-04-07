@@ -3,6 +3,8 @@ world-specific-backpacks: false
 drop-items-on-player-death: true
 auto-add-pickups-to-storage: true
 update-check: true
+use-Minecraft-UUID: true
+display-prefix: true
 storage-name: Backpack
 error-log-level: 1
 Compatibility-Settings:

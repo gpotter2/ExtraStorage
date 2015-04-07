@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Antony Prince and Gabriel POTTER
+ *  Copyright (C) 2015 Gabriel POTTER
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -113,13 +113,7 @@ import org.bukkit.inventory.ItemStack;
            if (drops[n] != null)
            {
              Item dropItem = event.getPlayer().getWorld().dropItemNaturally(event.getPlayer().getLocation(), drops[n]);
-             
- 
- 
- 
- 
              PlayerDropItemEvent itemDrop = new PlayerDropItemEvent((Player)event.getPlayer(), dropItem);
-             
              plugin.getServer().getPluginManager().callEvent(itemDrop);
            }
          }
@@ -129,10 +123,6 @@ import org.bukkit.inventory.ItemStack;
            if (((Boolean)ExtraStorage.invChanged.get(player_uuid)).booleanValue())
            {
              IO.saveBackPack((Inventory) ExtraStorage.Inventories.get(player_uuid), (File)ExtraStorage.saveFiles.get(player_uuid));
-             
- 
- 
- 
              ExtraStorage.invChanged.remove(player_uuid);
            }
          }
@@ -141,8 +131,8 @@ import org.bukkit.inventory.ItemStack;
      catch (Exception e)
      {
        log = plugin.getLogger();
-    	 log.severe("Error in onInventoryClose()");
-    	 e.printStackTrace();
+       log.severe("Error in onInventoryClose()");
+       e.printStackTrace();
 				}
    }
    

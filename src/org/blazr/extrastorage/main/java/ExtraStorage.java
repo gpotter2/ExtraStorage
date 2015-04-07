@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2015 Antony Prince and Gabriel POTTER
+ *  Copyright (C) 2015 Gabriel POTTER
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- */
+ */ 
 
 package org.blazr.extrastorage.main.java;
 
@@ -49,6 +49,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -71,8 +72,10 @@ import org.bukkit.scheduler.BukkitRunnable;
    protected static ExtraStorage plugin = null;
    protected static int errorLogLevel = 1;
    protected static String PNC;
-   static  boolean importStarted = false;
+   static boolean importStarted = false;
    static Import imp = null;
+   
+   static boolean mojangUUID;
    
    public File e_file;
    
@@ -197,22 +200,19 @@ import org.bukkit.scheduler.BukkitRunnable;
      return false;
    }
    
-   @SuppressWarnings("deprecation")
-public void setPlayerStorage(String playerName, Inventory inventory) {
-     Logger log;
-     try {
-    	UUID concerned_uuid = ExtraStorage.getUUIDMinecraft(Bukkit.getOfflinePlayer(playerName), true);
-    	if(concerned_uuid == null){
- 		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + playerName);
- 		   return;
- 	   	}
-       	Inventories.put(concerned_uuid, inventory);
-       	invChanged.put(UUID.fromString(playerName), Boolean.valueOf(true));
-     } catch (Exception e) {
-    	 log = getLogger();
-   	  	 log.severe("Error in setPlayerStorage()");
-   	  	 e.printStackTrace();
-	 }
+   public static void setPlayerStorage(Player player, Inventory inventory){
+	   try {
+	    	UUID concerned_uuid = ExtraStorage.getUUIDMinecraft(player, true);
+	    	if(concerned_uuid == null){
+	 		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + player.getName());
+	 		   return;
+	 	   	}
+	       	Inventories.put(concerned_uuid, inventory);
+	       	invChanged.put(concerned_uuid, Boolean.valueOf(true));
+	     } catch (Exception e) {
+	   	  	 plugin.getLogger().severe("Error in setPlayerStorage()");
+	   	  	 e.printStackTrace();
+		 }
    }
    
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
@@ -223,6 +223,9 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
 		return false;
 	}
 	
+	public static void loadBackpackFromDiskOnLogin(Player player) throws IOException {
+		IO.loadBackpackFromDiskOnLogin(player, plugin);
+	}
    
    String[] getWorldAndPlayer(String[] s){
 		String old = null;
@@ -253,16 +256,34 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
    public void onDisable()
    {
      Logger log = getLogger();
-     try
-     {
-       IO.save();
-     }
-     catch (Exception e)
-     {
+     try {
+       IO.save(this);
+     } catch (Exception e) {
 		log.severe("Error saving inventories during disable! Backpacks may not be saved properly!");
 		e.printStackTrace();
 	 }
      log.info("Disabled!");
+   }
+   
+   public void loadUUID(ExtraStorage plugin) throws IOException {
+	   if(mojangUUID){
+		   File uuid_save_file = new File(plugin.getDataFolder().getCanonicalPath() + File.separator + "uuid_database.yml");
+		   if(!uuid_save_file.exists()){
+			   uuid_save_file.createNewFile();
+			   return;
+		   }
+		   YamlConfiguration uuid_save = YamlConfiguration.loadConfiguration(uuid_save_file);
+		   for(String key : uuid_save.getKeys(false)){
+			   if(isUUID(key)){
+				   UUID bukkit_uuid = UUID.fromString(key);
+				   String value = uuid_save.getString(key);
+				   if(isUUID(value)){
+					   UUID mojang_uuid = UUID.fromString(value);
+					   known_uuid.put(bukkit_uuid, mojang_uuid);
+				   }
+			   }
+		   }
+	   }
    }
    
    @SuppressWarnings("deprecation")
@@ -276,19 +297,16 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
        EventHandlers eh = new EventHandlers();
        pm.registerEvents(eh, this);
        File defaultDir = getDataFolder().getCanonicalFile();
-       if (!defaultDir.exists())
-       {
+       if (!defaultDir.exists()) {
          defaultDir.mkdir();
          File newDataLoc = new File(defaultDir.getCanonicalPath() + File.separator + "data");
-         
          newDataLoc.mkdir();
          saveResource("LICENSE.txt", true);
        }
        else
        {
          File newDataLoc = new File(defaultDir.getCanonicalPath() + File.separator + "data");
-         if (!newDataLoc.exists())
-         {
+         if (!newDataLoc.exists()) {
            newDataLoc.mkdir();
            saveResource("LICENSE.txt", true);
          }
@@ -345,7 +363,10 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
          conf.set("blacklisted-items", newList);
        }
        if(!conf.isSet("update-check")) conf.set("update-check", true);
+       if(!conf.isSet("use-Minecraft-UUID")) conf.set("use-Minecraft-UUID", true);
        boolean update_check = conf.getBoolean("update-check");
+       mojangUUID = conf.getBoolean("use-Minecraft-UUID");
+       loadUUID(this);
        saveConfig();
        
        try {
@@ -371,8 +392,7 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
        
    }
    
-   private static boolean isNumeric(String str)
-   {
+   private static boolean isNumeric(String str){
      for (char c : str.toCharArray()) {
        if (Character.isDigit(c)) {
          return true;
@@ -391,15 +411,19 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
    }
    
    public static UUID getUUIDMinecraft(OfflinePlayer p, boolean main_thread){
-	   if(known_uuid.containsKey(p.getUniqueId())){
-		   return known_uuid.get(p.getUniqueId());
-	   } else {
-		   String uuid = getUUIDMinecraftS(p, main_thread);
-		   if(isUUID(uuid)){
-			   UUID c_uuid = UUID.fromString(uuid);
-			   known_uuid.put(p.getUniqueId(), c_uuid);
-			   return c_uuid;
+	   if(mojangUUID){
+		   if(known_uuid.containsKey(p.getUniqueId())){
+			   return known_uuid.get(p.getUniqueId());
+		   } else {
+			   String uuid = getUUIDMinecraftS(p, main_thread);
+			   if(isUUID(uuid)){
+				   UUID c_uuid = UUID.fromString(uuid);
+				   known_uuid.put(p.getUniqueId(), c_uuid);
+				   return c_uuid;
+			   }
 		   }
+	   } else {
+		   return p.getUniqueId();
 	   }
 	   return null;
    }
@@ -438,18 +462,22 @@ public void setPlayerStorage(String playerName, Inventory inventory) {
     @deprecated
 	*/
 	public static String getUUIDMinecraftS(OfflinePlayer p, boolean main_thread){
-		String basic = "https://api.mojang.com/users/profiles/minecraft/";
-		String get = getText(basic + p.getName(), main_thread);
-		if(get == null){
-			return null;
-		} else if(get.equals("wait")){
-			return "wait";
-		}
-		JSONObject array = new JSONObject(get);
-		if(array.has("id")){
-			return UUID.fromString(array.getString("id").replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5")).toString();
+		if(mojangUUID){
+			String basic = "https://api.mojang.com/users/profiles/minecraft/";
+			String get = getText(basic + p.getName(), main_thread);
+			if(get == null){
+				return null;
+			} else if(get.equals("wait")){
+				return "wait";
+			}
+			JSONObject array = new JSONObject(get);
+			if(array.has("id")){
+				return UUID.fromString(array.getString("id").replaceFirst("(\\w{8})(\\w{4})(\\w{4})(\\w{4})(\\w{12})", "$1-$2-$3-$4-$5")).toString();
+			} else {
+				return null;
+			}
 		} else {
-			return null;
+			return p.getUniqueId().toString();
 		}
 	}
 	

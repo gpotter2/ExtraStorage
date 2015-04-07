@@ -1,3 +1,21 @@
+/*
+ *  Copyright (C) 2015 Gabriel POTTER
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */ 
+
 package org.blazr.extrastorage.main.java;
 
 import java.io.File;
@@ -41,10 +59,10 @@ public class CommandsHandler extends Thread {
 	public void run() {
 
 	     Logger log = plugin.getLogger();
-		  UUID sender_uuid = null;
-		  if(sender instanceof Player){
+		 UUID sender_uuid = null;
+		 if(sender instanceof Player){
 			  sender_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) sender, false);
-		  }
+		 }
 	     try
 	     {
 	       String cmdName = cmd.getName().toLowerCase();
@@ -63,23 +81,16 @@ public class CommandsHandler extends Thread {
 	             Player player = (Player)sender;
 	             if (plugin.getConfig().getList("world-blacklist.worlds").contains(player.getWorld().getName())) {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "Backpack not allowed in this world.");
-	             } else if (sender.hasPermission("ExtraStorage.bp.open"))
-	             {
-	               if ((!plugin.getConfig().getBoolean("allow-when-not-in-survival-mode")) && (player.getGameMode() != GameMode.SURVIVAL))
-	               {
+	             } else if (sender.hasPermission("ExtraStorage.bp.open")) {
+	               if ((!plugin.getConfig().getBoolean("allow-when-not-in-survival-mode")) && (player.getGameMode() != GameMode.SURVIVAL)) {
 	                 sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You must be in survival mode to use the backpack!");
-	               }
-	               else if (ExtraStorage.Inventories.containsKey(sender_uuid))
-	               {
+	               } else if (ExtraStorage.Inventories.containsKey(sender_uuid)) {
 	                 player.openInventory((Inventory) ExtraStorage.Inventories.get(sender_uuid));
-	               }
-	               else
-	               {
+	               } else {
 	                 IO.loadBackpackFromDiskOnLogin(player, plugin);
 	                 player.openInventory((Inventory)ExtraStorage.Inventories.get(sender_uuid));
 	               }
-	             }
-	             else {
+	             } else {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You don't have permission for that command.");
 	             }
 	           }
