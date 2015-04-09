@@ -1,4 +1,4 @@
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;

@@ -1,4 +1,4 @@
-package org.blazr.extrastorage.main.java.json;
+package org.blazr.extrastorage.json;
 
 /**
  * The JSONException is thrown by the JSON.org classes when things are amiss.

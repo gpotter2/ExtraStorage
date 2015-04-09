@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
 
 import java.io.BufferedReader;
 import java.io.File;

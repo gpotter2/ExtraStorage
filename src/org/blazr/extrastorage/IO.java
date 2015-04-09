@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
 
  import java.io.File;
 import java.io.IOException;

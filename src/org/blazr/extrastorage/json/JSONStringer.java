@@ -1,4 +1,4 @@
-package org.blazr.extrastorage.main.java.json;
+package org.blazr.extrastorage.json;
 
 /*
 Copyright (c) 2006 JSON.org

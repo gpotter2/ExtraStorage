@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
 
 import java.io.IOException;
 import java.util.UUID;

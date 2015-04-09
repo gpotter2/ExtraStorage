@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
  
  import java.io.File;
 import java.util.UUID;
@@ -50,7 +50,11 @@ import org.bukkit.inventory.ItemStack;
  public class EventHandlers
    implements Listener
  {
-   private static ExtraStorage plugin = ExtraStorage.plugin;
+   private ExtraStorage plugin;
+   
+   public EventHandlers(ExtraStorage plugin){
+	   this.plugin = plugin;
+   }
    
    @EventHandler(priority=EventPriority.NORMAL)
    private void onInventoryClick(InventoryClickEvent event)
@@ -133,17 +137,19 @@ import org.bukkit.inventory.ItemStack;
        log = plugin.getLogger();
        log.severe("Error in onInventoryClose()");
        e.printStackTrace();
-				}
+	 }
    }
    
    @EventHandler
    public void join(PlayerJoinEvent event){
- 	  if(plugin.updatenotice){
- 		  if(event.getPlayer().hasPermission("ExtraStorage.*")){
- 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] A new great update of the plugin is available !");
- 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] Your version: " + ChatColor.RED + "v" + plugin.getDescription().getVersion() + ChatColor.GREEN + ". New version: " + ChatColor.GOLD + plugin.updatenoticemessage + ChatColor.GREEN + " !");
- 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] To download it, just type: '/bp update' !");
- 		  }
+ 	  if(plugin != null){
+		   if(plugin.updatenotice){
+	 		  if(event.getPlayer().hasPermission("ExtraStorage.*")){
+	 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] A new great update of the plugin is available !");
+	 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] Your version: " + ChatColor.RED + "v" + plugin.getDescription().getVersion() + ChatColor.GREEN + ". New version: " + ChatColor.GOLD + plugin.updatenoticemessage + ChatColor.GREEN + " !");
+	 			  event.getPlayer().sendMessage(ChatColor.GREEN + "[ExtraStorage] To download it, just type: '/bp update' !");
+	 		  }
+	 	  }
  	  }
    }
    

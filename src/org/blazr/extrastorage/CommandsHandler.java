@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
 
 import java.io.File;
 import java.util.HashMap;
@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import org.blazr.extrastorage.main.java.Updater.UpdateResult;
+import org.blazr.extrastorage.util.Updater;
+import org.blazr.extrastorage.util.Updater.UpdateResult;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;

@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
 
 import java.awt.Event;
 import java.io.BufferedReader;
@@ -38,8 +38,10 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.blazr.extrastorage.main.java.Updater.UpdateResult;
-import org.blazr.extrastorage.main.java.json.JSONObject;
+import org.blazr.extrastorage.json.JSONObject;
+import org.blazr.extrastorage.util.Metrics;
+import org.blazr.extrastorage.util.Updater;
+import org.blazr.extrastorage.util.Updater.UpdateResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -288,13 +290,14 @@ import org.bukkit.scheduler.BukkitRunnable;
    
    @SuppressWarnings("deprecation")
    public void onEnable() {
+	 compilationSuccess();
      Logger log = getLogger();
      try
      {
        plugin = this;
        e_file = getFile();
        PluginManager pm = getServer().getPluginManager();
-       EventHandlers eh = new EventHandlers();
+       EventHandlers eh = new EventHandlers(this);
        pm.registerEvents(eh, this);
        File defaultDir = getDataFolder().getCanonicalFile();
        if (!defaultDir.exists()) {
@@ -478,6 +481,34 @@ import org.bukkit.scheduler.BukkitRunnable;
 			}
 		} else {
 			return p.getUniqueId().toString();
+		}
+	}
+	
+	public boolean compilationSuccess(){
+		try {
+			Class.forName("org.blazr.extrastorage.CommandsHandler");
+			Class.forName("org.blazr.extrastorage.EventHandlers");
+			Class.forName("org.blazr.extrastorage.ExtraStorageAPI");
+			Class.forName("org.blazr.extrastorage.Import");
+			Class.forName("org.blazr.extrastorage.IO");
+			Class.forName("org.blazr.extrastorage.VNPCompat");
+			Class.forName("org.blazr.extrastorage.json.JSONArray");
+			Class.forName("org.blazr.extrastorage.json.JSONException");
+			Class.forName("org.blazr.extrastorage.json.JSONObject");
+			Class.forName("org.blazr.extrastorage.json.JSONString");
+			Class.forName("org.blazr.extrastorage.json.JSONStringer");
+			Class.forName("org.blazr.extrastorage.json.JSONTokener");
+			Class.forName("org.blazr.extrastorage.json.JSONWriter");
+			Class.forName("org.blazr.extrastorage.util.Metrics");
+			Class.forName("org.blazr.extrastorage.util.Updater");
+			return true;
+		} catch(ClassNotFoundException e){
+			getLogger().severe("######################################################");
+			getLogger().severe("######################################################");
+			getLogger().severe("The class '" + e.getMessage() + "' wasn't compiled !!!");
+			getLogger().severe("######################################################");
+			getLogger().severe("######################################################");
+			return false;
 		}
 	}
 	

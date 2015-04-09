@@ -1,4 +1,4 @@
-package org.blazr.extrastorage.main.java.json;
+package org.blazr.extrastorage.json;
 
 import java.io.IOException;
 import java.io.Writer;

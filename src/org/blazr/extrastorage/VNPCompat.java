@@ -16,7 +16,7 @@
  * 
  */ 
 
-package org.blazr.extrastorage.main.java;
+package org.blazr.extrastorage;
  
  import java.util.UUID;
 
@@ -28,22 +28,16 @@ package org.blazr.extrastorage.main.java;
  import org.kitteh.vanish.VanishPlugin; 
  
  
- class VNPCompat
- {
+class VNPCompat {
    protected static void vanishPlayerPickupItemEvent(PlayerPickupItemEvent event, Plugin plugin)
      throws Exception
    {
      VanishPlugin vnp = (VanishPlugin) plugin.getServer().getPluginManager().getPlugin("VanishNoPacket");
-     if (vnp.getManager().isVanished(event.getPlayer()))
-     {
+     if (vnp.getManager().isVanished(event.getPlayer())) {
        event.setCancelled(true);
-     }
-     else
-     {
-				  UUID player_uuid = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
+     } else {
+    	 UUID player_uuid = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
        ((Inventory)ExtraStorage.Inventories.get(player_uuid)).addItem(new ItemStack[] { event.getItem().getItemStack() });
-       
- 
        ExtraStorage.invChanged.put(player_uuid, Boolean.valueOf(true));
        event.getItem().remove();
        event.setCancelled(true);
