@@ -1,6 +1,6 @@
 name: ExtraStorage
-main: org.blazr.extrastorage.main.java.ExtraStorage
-version: 0.6
+main: org.blazr.extrastorage.ExtraStorage
+version: 0.9
 
 commands:
   bp:
@@ -18,6 +18,22 @@ commands:
   bp version:
     description: Lists the plugin's version
     usage: /bp version
+  bp update:
+    description: Update the plugin
+    usage: /bp update
+  bp my_uuid:
+    description: Print your Minecraft UUID
+    usage: /bp my_uuid
+  bp import:
+    description: Import all old name files to UUID files
+    usage: /bp import
+  bp not_imported:
+    description: Print the list of not imported files
+    usage: /bp not_imported
+  bp set:
+    description: Assign a not imported file to a player
+    usage: /bp set <file_without_.yml> <player_name>
+
 permissions:
   ExtraStorage.*:
     description: Gives access to all commands
