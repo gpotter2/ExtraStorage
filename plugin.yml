@@ -1,6 +1,6 @@
 name: ExtraStorage
 main: org.blazr.extrastorage.ExtraStorage
-version: 0.9
+version: 1.0
 
 commands:
   bp:

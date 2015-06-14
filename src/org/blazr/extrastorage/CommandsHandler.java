@@ -26,6 +26,7 @@ import java.util.logging.Logger;
 
 import org.blazr.extrastorage.util.Updater;
 import org.blazr.extrastorage.util.Updater.UpdateResult;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
@@ -67,18 +68,13 @@ public class CommandsHandler extends Thread {
 	     try
 	     {
 	       String cmdName = cmd.getName().toLowerCase();
-	       if (cmdName.trim().equals("bp"))
-	       {
+	       if (cmdName.trim().equals("bp")){
 	         int numOfArgs = args.length;
-	         switch (numOfArgs)
-	         {
+	         switch (numOfArgs){
 	         case 0: 
-	           if (!(sender instanceof Player))
-	           {
+	           if (!(sender instanceof Player)){
 	             sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You must be a player to use the backpack!");
-	           }
-	           else
-	           {
+	           } else {
 	             Player player = (Player)sender;
 	             if (plugin.getConfig().getList("world-blacklist.worlds").contains(player.getWorld().getName())) {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "Backpack not allowed in this world.");
@@ -108,7 +104,6 @@ public class CommandsHandler extends Thread {
 	            	   IO.loadBackpackFromDiskOnLogin(player1, plugin);
 	               }
 	               sender.sendMessage(ExtraStorage.PNC + "Reloaded ExtraStorage successfully.");
-	               
 	               log.info("Reloaded successfully");
 	             }
 	             else
@@ -237,10 +232,7 @@ public class CommandsHandler extends Thread {
 								  return;
 							  }
 	             if (sender.hasPermission("ExtraStorage.player.*")) {
-									double now = System.currentTimeMillis();
-									double after = System.currentTimeMillis();
-									double time = after - now;
-	               	sender.sendMessage(ExtraStorage.PNC + "ExtraStorage: Your uuid=" + sender_uuid + "; Time=" + time + "ms");
+	               	sender.sendMessage(ExtraStorage.PNC + "ExtraStorage: Your uuid=" + sender_uuid);
 	             } else {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You do not have permission for that command");
 	             }
@@ -292,6 +284,16 @@ public class CommandsHandler extends Thread {
 	             } else {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You don't have permission for that command.");
 	             }
+	           } else if (args[0].equalsIgnoreCase("uuid")){
+					  if (sender.hasPermission("ExtraStorage.player.*")) {
+							double now = System.currentTimeMillis();
+							UUID to_check_uuid = ExtraStorage.getUUIDMinecraft(Bukkit.getServer().getOfflinePlayer(args[1]), false);
+							double after = System.currentTimeMillis();
+							double time = after - now;
+							sender.sendMessage(ExtraStorage.PNC + "ExtraStorage: The uuid=" + to_check_uuid + "; Time=" + time + "ms");
+				      } else {
+				        sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You do not have permission for that command");
+				      }
 	           } else {
 	             sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "Unknown command. Type /bp help");
 	           }

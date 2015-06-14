@@ -60,20 +60,17 @@ import org.bukkit.inventory.ItemStack;
    private void onInventoryClick(InventoryClickEvent event)
    {
      Logger log;
-     try
-     {
+     try {
        if (((event.getWhoClicked().hasPermission("ExtraStorage.bp.open")) || (event.getWhoClicked().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getWhoClicked().getWorld().getName()))) {
          if ((event.getInventory().getTitle().contentEquals(plugin.getConfig().getString("storage-name"))) && (!event.isCancelled())) {
-           ExtraStorage.invChanged.put(ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getWhoClicked(), true), Boolean.valueOf(true));
+        	 ExtraStorage.invChanged.put(ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getWhoClicked(), true), Boolean.valueOf(true));
          }
        }
+     } catch (Exception ex) {
+    	log = plugin.getLogger();
+   	 	ex.printStackTrace();
+    	log.severe("Error in onInventoryClick method caused by " + event.getWhoClicked().getName());
      }
-     catch (Exception ex)
-     {
-       log = plugin.getLogger();
-   	 ex.printStackTrace();
-    	 log.severe("Error in onInventoryClick method caused by " + event.getWhoClicked().getName());
-}
 }
    
    @SuppressWarnings("deprecation")
@@ -280,13 +277,11 @@ import org.bukkit.inventory.ItemStack;
        if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())) {
          IO.loadBackpackFromDiskOnLogin(event.getPlayer(), plugin);
        }
-     }
-     catch (Exception e)
-     {
+     }catch (Exception e){
        log = plugin.getLogger();
        e.printStackTrace();
        log.severe("Error loading backpack inventory for " + event.getPlayer().getName());
-				  }
+     }
    }
    
    @EventHandler(priority=EventPriority.NORMAL)
@@ -301,7 +296,7 @@ import org.bukkit.inventory.ItemStack;
          if(playerName == null){
 			   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getPlayer().getName());
 			   return;
-		   }
+		 }
          if(ExtraStorage.saveFiles.get(playerName) != null && ExtraStorage.Inventories.get(playerName) != null){
         	 IO.saveBackPack((Inventory) ExtraStorage.Inventories.get(playerName), ExtraStorage.saveFiles.get(playerName));
          }

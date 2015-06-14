@@ -38,6 +38,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.blazr.extrastorage.json.JSONObject;
 import org.blazr.extrastorage.util.Metrics;
 import org.blazr.extrastorage.util.Updater;
@@ -89,7 +90,7 @@ import org.bukkit.scheduler.BukkitRunnable;
      try
      {
        boolean hasEmpty = false;
-       for (ItemStack inventoryItem : (Inventory)Inventories.get(playerName.toLowerCase())) {
+       for (ItemStack inventoryItem : (Inventory) Inventories.get(playerName.toLowerCase())) {
          if (inventoryItem == null) {
            hasEmpty = true;
          }
@@ -436,7 +437,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 		URLConnection urlConn = null;
 		InputStreamReader in = null;
 		try {
-			URL url = new URL(myURL);
+			URL url = new URL(StringEscapeUtils.escapeHtml(myURL));
 			urlConn = url.openConnection();
 			if (urlConn != null)
 				if(main_thread) urlConn.setReadTimeout(5 * 1000);
@@ -472,6 +473,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 				return null;
 			} else if(get.equals("wait")){
 				return "wait";
+			} else if(get.trim().equals("")){
+				return null;
+			} else if(!get.startsWith("{") || !get.endsWith("}")){
+				return null;
 			}
 			JSONObject array = new JSONObject(get);
 			if(array.has("id")){
