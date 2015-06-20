@@ -246,6 +246,9 @@ import org.bukkit.inventory.ItemStack;
 			   return;
 		 }
          String playerName = temp_uuid.toString() + "";
+         if(!ExtraStorage.Inventories.containsKey(playerName)){
+        	 return;
+         }
          ItemStack[] drops = ((Inventory)ExtraStorage.Inventories.get(playerName)).getContents();
          
          ((Inventory)ExtraStorage.Inventories.get(playerName)).clear();

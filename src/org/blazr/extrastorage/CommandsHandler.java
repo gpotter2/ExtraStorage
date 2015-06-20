@@ -203,7 +203,8 @@ public class CommandsHandler extends Thread {
 	             }
 	           } else if (args[0].equalsIgnoreCase("version")) {
 	             if (sender.hasPermission("ExtraStorage.player.version")) {
-	               sender.sendMessage(ExtraStorage.PNC + "ExtraStorage Version: " + plugin.getDescription().getVersion() + " !");
+	               sender.sendMessage(ExtraStorage.PNC + ChatColor.YELLOW + "ExtraStorage Version: " + plugin.getDescription().getVersion() + " !");
+	               sender.sendMessage(ExtraStorage.PNC + ChatColor.GREEN + "Plugin created by Blazr, then updated by XN05F3R4TU and finally recoded by " + ChatColor.BOLD + ChatColor.UNDERLINE + "gpotter2" + ChatColor.RESET + ChatColor.GREEN + " !");
 	             } else {
 	               sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You do not have permission for that command");
 	             }
