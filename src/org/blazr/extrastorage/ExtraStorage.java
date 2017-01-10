@@ -84,6 +84,8 @@ import org.bukkit.scheduler.BukkitRunnable;
    
    public boolean updatenotice = false;
    public String updatenoticemessage = null;
+   
+   public ConfigLoader config_loader;
       
    public boolean addItemToPlayerStorage(String playerName, ItemStack item)
    {
@@ -289,12 +291,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 	   }
    }
    
-   @SuppressWarnings("deprecation")
    public void onEnable() {
 	 compilationSuccess();
      Logger log = getLogger();
-     try
-     {
+     try {
        plugin = this;
        e_file = getFile();
        PluginManager pm = getServer().getPluginManager();
@@ -306,14 +306,12 @@ import org.bukkit.scheduler.BukkitRunnable;
          File newDataLoc = new File(defaultDir.getCanonicalPath() + File.separator + "data");
          newDataLoc.mkdir();
          saveResource("LICENSE.txt", true);
-       }
-       else
-       {
-         File newDataLoc = new File(defaultDir.getCanonicalPath() + File.separator + "data");
-         if (!newDataLoc.exists()) {
-           newDataLoc.mkdir();
-           saveResource("LICENSE.txt", true);
-         }
+       } else {
+	         File newDataLoc = new File(defaultDir.getCanonicalPath() + File.separator + "data");
+	         if (!newDataLoc.exists()) {
+	           newDataLoc.mkdir();
+	           saveResource("LICENSE.txt", true);
+	         }
        }
        File oldFile1 = new File(defaultDir.getCanonicalPath() + File.separator + "data" + File.separator + "LastUpdateCheckTime");
        File oldFile2 = new File(defaultDir.getCanonicalPath() + File.separator + "data" + File.separator + "LatestVersion");
@@ -323,12 +321,6 @@ import org.bukkit.scheduler.BukkitRunnable;
        if (oldFile2.exists()) {
          oldFile2.delete();
        }
-       for (Player player : getServer().getOnlinePlayers()) {
-         if (!getConfig().getList("world-blacklist.worlds").contains(player.getWorld().getName())) {
-           IO.loadBackpackFromDiskOnLogin(player, this);
-         }
-       }
-       log.info("Enabled successfully.");
        FileConfiguration conf = getConfig();
        conf.options().copyDefaults(true);
        if (conf.get("Comaptibility-Settings.Vanish-No-Packet.no-item-pickup-when-vanished") != null) {
@@ -336,6 +328,9 @@ import org.bukkit.scheduler.BukkitRunnable;
        }
        if (!conf.isSet("display-prefix")) {
     	   conf.set("display-prefix", true);
+       }
+       if(!conf.isSet("disable-drop-message")){
+    	   conf.set("disable-drop-message", false);
        }
        if(conf.getBoolean("display-prefix")){
     	   PNC = ChatColor.YELLOW + "[ExtraStorage]";
@@ -349,14 +344,15 @@ import org.bukkit.scheduler.BukkitRunnable;
         	 isOldStyle = true;
          }
        }
-       if (isOldStyle)
-       {
+       if (isOldStyle) {
          List<String> newList = new ArrayList<String>();
          for (String item : blacklist) {
            if (isNumeric(item)) {
              int itemCode = Integer.parseInt(item);
              
-             ItemStack tempIS = new ItemStack(itemCode);
+             
+             @SuppressWarnings("deprecation")
+			ItemStack tempIS = new ItemStack(itemCode);
              newList.add(tempIS.getType().toString());
            }
            else
@@ -373,6 +369,13 @@ import org.bukkit.scheduler.BukkitRunnable;
        loadUUID(this);
        saveConfig();
        
+       config_loader = new ConfigLoader(getConfig(), this);
+       for (Player player : getServer().getOnlinePlayers()) {
+           if (!config_loader.isWorldBlackListed(player.getWorld())) {
+          	 	IO.loadBackpackFromDiskOnLogin(player, this);
+           }
+         }
+       
        try {
      	  Metrics metrics = new Metrics(this);
            metrics.start();
@@ -387,8 +390,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 	        	updatenotice = true;
 	        	updatenoticemessage = up.getLatestName().toLowerCase().replace("extrastorage", "");
 	        }
-     }
-       
+       }
+       log.info("Enabled successfully.");
      } catch (Exception e) {
 		e.printStackTrace();
 		log.severe("Error in onEnable! Plugin not enabled properly!");

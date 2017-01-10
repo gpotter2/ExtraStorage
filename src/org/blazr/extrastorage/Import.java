@@ -60,7 +60,7 @@ public class Import extends Thread {
 			File[] files = folder.listFiles();
 			if(sender != null) sender.sendMessage(ExtraStorage.PNC + ChatColor.YELLOW + "Starting importing names ! Have to check " + files.length + " files!");
 			if(sender != null) sender.sendMessage(ExtraStorage.PNC + ChatColor.YELLOW + "Step: 1/2 => Changing names...");
-			boolean worldactivated = plugin.getConfig().getBoolean("world-specific-backpacks", false);
+			boolean worldactivated = plugin.config_loader.WorldSpecificBagPack();
 			for(int i = 0; i < files.length; i++){
 				if(stop){
 					break;
@@ -137,7 +137,7 @@ public class Import extends Thread {
 			plugin.saveFiles = new HashMap<UUID, File>();
 			plugin.Inventories = new HashMap<UUID, Inventory>();
 			for (Player player : plugin.getServer().getOnlinePlayers()) {
-				if (!plugin.getConfig().getList("world-blacklist.worlds").contains(player.getWorld().getName())) {
+				if (!plugin.config_loader.isWorldBlackListed(player.getWorld())) {
 					try {
 						IO.loadBackpackFromDiskOnLogin(player, plugin);
 					} catch (Exception e) {

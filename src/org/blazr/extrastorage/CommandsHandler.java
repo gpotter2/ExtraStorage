@@ -226,7 +226,7 @@ public class CommandsHandler extends Thread {
 	               }
 	           } else if(args[0].equalsIgnoreCase("help")){
 	        	   sender.sendMessage(ExtraStorage.PNC + ChatColor.GREEN + " The command list is available here:");
-	        	   sender.sendMessage(ChatColor.BOLD + "" + ChatColor.BLUE + "http://dev.bukkit.org/bukkit-plugins/extra-storage/pages/main/commands-and-permissions/");
+	        	   sender.sendMessage(ChatColor.BOLD + "" + ChatColor.BLUE + "https://dev.bukkit.org/projects/extra-storage/pages/main/commands-and-permissions");
 	           } else if (args[0].equalsIgnoreCase("my_uuid")){
 							  if(!(sender instanceof Player)){
 								  sender.sendMessage(ExtraStorage.PNC + ChatColor.RED + "You must be a player to use that command!");

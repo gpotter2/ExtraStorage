@@ -61,8 +61,9 @@ import org.bukkit.inventory.ItemStack;
    {
      Logger log;
      try {
-       if (((event.getWhoClicked().hasPermission("ExtraStorage.bp.open")) || (event.getWhoClicked().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getWhoClicked().getWorld().getName()))) {
-         if ((event.getInventory().getTitle().contentEquals(plugin.getConfig().getString("storage-name"))) && (!event.isCancelled())) {
+       if (((event.getWhoClicked().hasPermission("ExtraStorage.bp.open")) || (event.getWhoClicked().hasPermission("ExtraStorage.sign.use"))) &&
+    		   (!plugin.config_loader.isWorldBlackListed(event.getWhoClicked().getWorld()))) {
+         if ((plugin.config_loader.correctStorage(event.getInventory())) && (!event.isCancelled())) {
         	 ExtraStorage.invChanged.put(ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getWhoClicked(), true), Boolean.valueOf(true));
          }
        }
@@ -73,7 +74,6 @@ import org.bukkit.inventory.ItemStack;
      }
 }
    
-   @SuppressWarnings("deprecation")
 @EventHandler(priority=EventPriority.NORMAL)
    private void onInventoryClose(InventoryCloseEvent event)
    {
@@ -81,11 +81,12 @@ import org.bukkit.inventory.ItemStack;
 	 UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer(), true);
      try
      {
-       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())) && (event.getInventory().getTitle().equals(plugin.getConfig().getString("storage-name"))))
+       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) &&
+    		   (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld())) &&
+    		   (plugin.config_loader.correctStorage(event.getInventory())))
        {
          ItemStack[] invItems = ((Inventory)ExtraStorage.Inventories.get(player_uuid)).getContents();
          
- 
          ItemStack[] drops = new ItemStack[54];
          int n = 0;
          int itemIndex = 0;
@@ -95,13 +96,13 @@ import org.bukkit.inventory.ItemStack;
          {
            if (items != null)
            {
-             if (plugin.getConfig().getList("blacklisted-items.items").contains(items.getType().toString()))
+             if (plugin.config_loader.isItemBlackListed(items))
              {
                drops[n] = items;
                invItems[itemIndex] = emptyItemStack;
                if (!messaged)
                {
-                 plugin.getServer().getPlayer(event.getPlayer().getName()).sendMessage("You can't put that item in your backpack.");
+                 event.getPlayer().sendMessage("You can't put that item in your backpack.");
                  messaged = true;
                }
              }
@@ -119,7 +120,8 @@ import org.bukkit.inventory.ItemStack;
            }
          }
        }
-       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))) {
+       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) &&
+    		   (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld()))) {
          if (ExtraStorage.invChanged.containsKey(player_uuid)) {
            if (((Boolean)ExtraStorage.invChanged.get(player_uuid)).booleanValue())
            {
@@ -156,9 +158,9 @@ import org.bukkit.inventory.ItemStack;
      Logger log;
      try
      {
-       if ((plugin.getConfig().getBoolean("auto-add-pickups-to-storage")) && (event.getPlayer().hasPermission("ExtraStorage.bp.open")) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))) {
+       if ((plugin.config_loader.AutoAddPickupsToStorage()) && (event.getPlayer().hasPermission("ExtraStorage.bp.open")) && (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld()))) {
 		 UUID player_uuid = ExtraStorage.getUUIDMinecraft((OfflinePlayer) event.getPlayer(), true);
-         if (!plugin.getConfig().getList("blacklisted-items.items").contains(event.getItem().getItemStack().getType().toString()))
+         if (!plugin.config_loader.isItemBlackListed(event.getItem().getItemStack()))
          {
            if (event.isCancelled()) {
              return;
@@ -180,7 +182,7 @@ import org.bukkit.inventory.ItemStack;
 	           {
 	             if (emptyBackPackSlots > 0)
 	             {
-	               if ((plugin.getServer().getPluginManager().getPlugin("VanishNoPacket") != null) && (plugin.getConfig().getBoolean("Compatibility-Settings.Vanish-No-Packet.no-item-pickup-when-vanished")))
+	               if ((plugin.getServer().getPluginManager().getPlugin("VanishNoPacket") != null) && (plugin.config_loader.VanishNoPacketNoItemPickup()))
 	               {
 	                 VNPCompat.vanishPlayerPickupItemEvent(event, plugin);
 	               }
@@ -192,7 +194,7 @@ import org.bukkit.inventory.ItemStack;
 	                 
 	                 event.getItem().remove();
 	                 event.setCancelled(true);
-	                 event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ITEM_PICKUP, 100.0F, 100.0F);
+	                 event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 100.0F, 100.0F);
 	               }
 	               return;
 	             }
@@ -216,7 +218,7 @@ import org.bukkit.inventory.ItemStack;
                emptyBackPackSlots++;
              }
            }
-           if ((emptyPlayerSlots == 1) && (emptyBackPackSlots > 0) && (plugin.getConfig().getList("blacklisted-items.items").contains(event.getItem().getItemStack().getType().toString()))) {
+           if ((emptyPlayerSlots == 1) && (emptyBackPackSlots > 0) && (plugin.config_loader.isItemBlackListed(event.getItem().getItemStack()))) {
              event.setCancelled(true);
            }
          }
@@ -235,18 +237,15 @@ import org.bukkit.inventory.ItemStack;
    {
      Logger log;
      try
-     {
-       if ((plugin.getConfig().getBoolean("drop-items-on-player-death")) && 
-         (event.getEntity().getPlayer().hasPermission("ExtraStorage.bp.open")) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getEntity().getPlayer().getWorld().getName())) && (!event.getEntity().getPlayer().hasPermission("ExtraStorage.player.noitemdrop")))
+     {     
+       if (plugin.config_loader.DropItemsOnDeath() && 
+         event.getEntity().getPlayer().hasPermission("ExtraStorage.bp.open") &&
+         !plugin.config_loader.isWorldBlackListed(event.getEntity().getPlayer().getWorld()) &&
+         (plugin.config_loader.DisableNoItemDrop() || !event.getEntity().getPlayer().hasPermission("ExtraStorage.player.noitemdrop")))
        {
-    	 
-         UUID temp_uuid = ExtraStorage.getUUIDMinecraft(event.getEntity().getPlayer(), true);
-         if(temp_uuid == null){
-			   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getEntity().getPlayer().getName());
-			   return;
-		 }
-         String playerName = temp_uuid.toString() + "";
+         UUID playerName = ExtraStorage.getUUIDMinecraft(event.getEntity().getPlayer(), true);
          if(!ExtraStorage.Inventories.containsKey(playerName)){
+        	 plugin.getLogger().info(ChatColor.RED + "Couldn't find inventory of:" + event.getEntity().getPlayer().getName());
         	 return;
          }
          ItemStack[] drops = ((Inventory)ExtraStorage.Inventories.get(playerName)).getContents();
@@ -277,7 +276,7 @@ import org.bukkit.inventory.ItemStack;
      Logger log;
      try
      {
-       if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())) {
+       if (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld())) {
          IO.loadBackpackFromDiskOnLogin(event.getPlayer(), plugin);
        }
      }catch (Exception e){
@@ -288,13 +287,11 @@ import org.bukkit.inventory.ItemStack;
    }
    
    @EventHandler(priority=EventPriority.NORMAL)
-   private void onPlayerQuit(PlayerQuitEvent event)
-   {
+   private void onPlayerQuit(PlayerQuitEvent event) {
      Logger log;
-     try
-     {
-       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) && (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())))
-       {
+     try {
+       if (((event.getPlayer().hasPermission("ExtraStorage.bp.open")) || (event.getPlayer().hasPermission("ExtraStorage.sign.use"))) &&
+    		   (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld()))) {
          UUID playerName = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
          if(playerName == null){
 			   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + event.getPlayer().getName());
@@ -305,13 +302,11 @@ import org.bukkit.inventory.ItemStack;
          }
          ExtraStorage.Inventories.remove(playerName);
        }
-     }
-     catch (Exception ex)
-     {
+     } catch (Exception ex) {
        log = plugin.getLogger();
        ex.printStackTrace();
        log.severe("Error in onPlayerQuit method caused by " + event.getPlayer().getName());
-				  }
+     }
    }
    
    @EventHandler(priority=EventPriority.NORMAL)
@@ -320,7 +315,7 @@ import org.bukkit.inventory.ItemStack;
      Logger log;
      try
      {
-       if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName())) {
+       if (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld())) {
          IO.loadBackpackFromDiskOnLogin(event.getPlayer(), plugin);
        }
      }
@@ -329,7 +324,7 @@ import org.bukkit.inventory.ItemStack;
        log = plugin.getLogger();
        e.printStackTrace();
        log.severe("Error loading backpack inventory for " + event.getPlayer().getName() + " after world switch.");
-					}
+	}
    }
    
    @EventHandler(priority=EventPriority.NORMAL)
@@ -338,17 +333,12 @@ import org.bukkit.inventory.ItemStack;
      Logger log;
      try
      {
-       if (event.getPlayer().hasPermission("ExtraStorage.sign.place"))
-       {
+       if (event.getPlayer().hasPermission("ExtraStorage.sign.place")) {
          if (event.getLine(0).toLowerCase().contains("extrastorage")) {
-           if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))
-           {
+           if (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld())) {
              event.setLine(0, ChatColor.DARK_RED + "ExtraStorage");
-           }
-           else
-           {
-             event.getPlayer().sendMessage("ExtraStorage not allowed in plugin world.");
-             
+           } else {
+             event.getPlayer().sendMessage("ExtraStorage not allowed in this world.");
              event.setCancelled(true);
            }
          }
@@ -381,7 +371,7 @@ import org.bukkit.inventory.ItemStack;
          if (sign.getLine(0).contains("ExtraStorage")) {
            if (event.getPlayer().hasPermission("ExtraStorage.sign.use"))
            {
-             if (!plugin.getConfig().getList("world-blacklist.worlds").contains(event.getPlayer().getWorld().getName()))
+             if (!plugin.config_loader.isWorldBlackListed(event.getPlayer().getWorld()))
              {
 			   UUID player_uuid = ExtraStorage.getUUIDMinecraft(event.getPlayer(), true);
 			   if(player_uuid == null){
@@ -408,12 +398,10 @@ import org.bukkit.inventory.ItemStack;
            }
          }
        }
-     }
-     catch (Exception e)
-     {
+     } catch (Exception e) {
        log = plugin.getLogger();
     	 e.printStackTrace();
      	log.severe("Error in signClicked method caused by " + event.getPlayer().getName());
-					}
+     }
    }
  }

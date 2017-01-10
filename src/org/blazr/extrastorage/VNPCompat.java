@@ -41,7 +41,7 @@ class VNPCompat {
        ExtraStorage.invChanged.put(player_uuid, Boolean.valueOf(true));
        event.getItem().remove();
        event.setCancelled(true);
-       event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ITEM_PICKUP, 100.0F, 100.0F);
+       event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_ITEM_PICKUP, 100.0F, 100.0F);
      }
    }
  }

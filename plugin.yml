@@ -1,6 +1,9 @@
 name: ExtraStorage
 main: org.blazr.extrastorage.ExtraStorage
-version: 1.0
+version: 1.0.2
+
+author: gpotter2
+website: http://dev.bukkit.org/bukkit-plugins/extra-storage/
 
 commands:
   bp:

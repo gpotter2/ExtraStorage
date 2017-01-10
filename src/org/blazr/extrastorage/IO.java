@@ -25,33 +25,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
- import org.bukkit.ChatColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.Plugin;
  
  
  public class IO
  {
-   private static Inventory changeTitle(Inventory inv, Plugin plugin, int invSize) {
+   private static Inventory changeTitle(Inventory inv, ExtraStorage plugin, int invSize) {
 	   Inventory newInventory = null;
-	   if(plugin.getConfig().getString("storage-name") != null){
-		     newInventory = plugin.getServer().createInventory(null, invSize, plugin.getConfig().getString("storage-name"));
+	   if(plugin.config_loader.getStorageName() != null){
+		     newInventory = plugin.getServer().createInventory(null, invSize, plugin.config_loader.getStorageName());
 		     int n = 0;
 		     while (n < invSize)
 		     {
 		       newInventory.setItem(n, inv.getItem(n));
 		       n++;
 		     }
-	   }
+	 }
      return newInventory;
    }
    
-   private static void loadBackPack(File loadFile, Inventory inventory, Plugin plugin, int invSize, Player player) throws IOException{
+   private static void loadBackPack(File loadFile, Inventory inventory, ExtraStorage plugin, int invSize, Player player) throws IOException{
      FileConfiguration backpackConfig = YamlConfiguration.loadConfiguration(loadFile);
      
      List<?> list = backpackConfig.getList("inventory");
@@ -129,7 +128,7 @@ import org.bukkit.plugin.Plugin;
      }
    }
    
-   protected static void loadBackpackFromDiskOnLogin(Player player, Plugin plugin) throws IOException {
+   protected static void loadBackpackFromDiskOnLogin(Player player, ExtraStorage plugin) throws IOException {
      if ((player.hasPermission("ExtraStorage.bp.open")) || (player.hasPermission("ExtraStorage.sign.use")))
      {
        Inventory inventory = null;
@@ -139,7 +138,7 @@ import org.bukkit.plugin.Plugin;
 		   plugin.getLogger().info(ChatColor.RED + "Couldn't find unique ID from the player:" + player.getName());
 		   return;
 	   }
-       if (plugin.getConfig().getBoolean("world-specific-backpacks")) {
+       if (plugin.config_loader.WorldSpecificBagPack()) {
         	playerName = player.getWorld().getName() + "_" + player_uuid;
        } else {
          	playerName = player_uuid + "";
@@ -210,7 +209,13 @@ import org.bukkit.plugin.Plugin;
          invSaveFile.createNewFile();
        }
        if (overageInventoriesFile.exists()) {
-         player.sendMessage("Don't forget to do \"/bp drop\" to recover your items!");
+    	   if(!plugin.config_loader.DisableDropMessage()){
+	    	   String[] notifications = new String[3];
+	           notifications[0] = (ExtraStorage.PNC + ChatColor.RED + "You have extra items because your backpack can't contain them");
+	           notifications[1] = (ExtraStorage.PNC + ChatColor.RED + "To retrieve the extra items, find a safe place");
+	           notifications[2] = (ExtraStorage.PNC + ChatColor.RED + "and type \"/bp drop\" to drop the extra items.");
+	           player.sendMessage(notifications);
+    	   }
        }
      }
    }

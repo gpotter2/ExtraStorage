@@ -1,10 +1,12 @@
 allow-when-not-in-survival-mode: false
 world-specific-backpacks: false
 drop-items-on-player-death: true
+disable-noitemdrop-perm: false
 auto-add-pickups-to-storage: true
 update-check: true
-use-Minecraft-UUID: true
+use-Minecraft-UUID: false
 display-prefix: true
+disable-drop-message: false
 storage-name: Backpack
 error-log-level: 1
 Compatibility-Settings:
